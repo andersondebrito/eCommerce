@@ -24,7 +24,6 @@ hs_err_pid*
 /.idea/.name
 /.idea/compiler.xml
 /.idea/encodings.xml
-/HELP.md
 /.idea/jarRepositories.xml
 /.idea/libraries/Maven__antlr_antlr_2_7_7.xml
 /.idea/libraries/Maven__ch_qos_logback_logback_classic_1_2_3.xml
