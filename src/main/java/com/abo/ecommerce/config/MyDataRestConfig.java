@@ -1,6 +1,11 @@
 package com.abo.ecommerce.config;
 
-import com.abo.ecommerce.entity.*;
+import com.abo.ecommerce.entity.Product;
+import com.abo.ecommerce.entity.Country;
+import com.abo.ecommerce.entity.Order;
+import com.abo.ecommerce.entity.State;
+import com.abo.ecommerce.entity.ProductCategory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
@@ -19,19 +24,22 @@ public class MyDataRestConfig implements RepositoryRestConfigurer {
 
     @Value("${allowed.origins}")
     private String[] theAllowedOrigins;
+
     private EntityManager entityManager;
 
-    public MyDataRestConfig(EntityManager entityManager) {
-        this.entityManager = entityManager;
+    @Autowired
+    public MyDataRestConfig(EntityManager theEntityManager) {
+        entityManager = theEntityManager;
     }
 
+
     @Override
-    public void configureRepositoryRestConfiguration(RepositoryRestConfiguration config, CorsRegistry corsRegistry) {
+    public void configureRepositoryRestConfiguration(RepositoryRestConfiguration config, CorsRegistry cors) {
 
-        HttpMethod[] theUnsupportedActions = {HttpMethod.DELETE,
-                HttpMethod.PUT, HttpMethod.POST, HttpMethod.PATCH};
+        HttpMethod[] theUnsupportedActions = {HttpMethod.PUT, HttpMethod.POST,
+                HttpMethod.DELETE, HttpMethod.PATCH};
 
-        // disable HTTP methods for Product: PUT, POST and DELETE
+        // disable HTTP methods for ProductCategory: PUT, POST, DELETE and PATCH
         disableHttpMethods(Product.class, config, theUnsupportedActions);
         disableHttpMethods(ProductCategory.class, config, theUnsupportedActions);
         disableHttpMethods(Country.class, config, theUnsupportedActions);
@@ -42,32 +50,33 @@ public class MyDataRestConfig implements RepositoryRestConfigurer {
         exposeIds(config);
 
         // configure cors mapping
-        corsRegistry.addMapping(config.getBasePath() + "/**").allowedOrigins(theAllowedOrigins);
+        cors.addMapping(config.getBasePath() + "/**").allowedOrigins(theAllowedOrigins);
     }
 
     private void disableHttpMethods(Class theClass, RepositoryRestConfiguration config, HttpMethod[] theUnsupportedActions) {
         config.getExposureConfiguration()
                 .forDomainType(theClass)
-                .withItemExposure(((metdata, httpMethods) -> httpMethods.disable(theUnsupportedActions)))
-                .withCollectionExposure(((metdata, httpMethods) -> httpMethods.disable(theUnsupportedActions)));
+                .withItemExposure((metdata, httpMethods) -> httpMethods.disable(theUnsupportedActions))
+                .withCollectionExposure((metdata, httpMethods) -> httpMethods.disable(theUnsupportedActions));
     }
 
     private void exposeIds(RepositoryRestConfiguration config) {
 
         // expose entity ids
+        //
 
-        // get a list of all entity classes from the entity manager
+        // - get a list of all entity classes from the entity manager
         Set<EntityType<?>> entities = entityManager.getMetamodel().getEntities();
 
-        // create an array of the entity types
+        // - create an array of the entity types
         List<Class> entityClasses = new ArrayList<>();
 
-        // get entity types for the entities
-        for(EntityType tempEntityType: entities) {
+        // - get the entity types for the entities
+        for (EntityType tempEntityType : entities) {
             entityClasses.add(tempEntityType.getJavaType());
         }
 
-        // expose the entity ids for the array of entity/domain types
+        // - expose the entity ids for the array of entity/domain types
         Class[] domainTypes = entityClasses.toArray(new Class[0]);
         config.exposeIdsFor(domainTypes);
     }
